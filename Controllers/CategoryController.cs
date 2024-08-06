@@ -9,12 +9,10 @@ namespace ArticleApi.Controllers;
 [Route("Category")]
 public class CategoryController : Controller
 {
-    private readonly AppDbContext _context;
     private readonly ICategoryService _categoryService;
 
-    public CategoryController(AppDbContext context, ICategoryService categoryService)
+    public CategoryController(ICategoryService categoryService)
     {
-        _context = context;
         this._categoryService = categoryService;
     }
 

@@ -9,12 +9,10 @@ namespace ArticleApi.Controllers;
 [Route("Author")]
 public class AuthorController : Controller
 {
-    private readonly AppDbContext _context;
     private readonly IAuthorService _authorService;
 
-    public AuthorController(AppDbContext context, IAuthorService authorService)
+    public AuthorController(IAuthorService authorService)
     {
-        _context = context;
         this._authorService = authorService;
     }
     

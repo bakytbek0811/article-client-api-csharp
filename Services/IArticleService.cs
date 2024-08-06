@@ -4,9 +4,9 @@ namespace ArticleApi.Services;
 
 public interface IArticleService
 {
-    Task UpdateArticleAsync(int Id, UpdateArticleDto Dto);
-    Task<Article> CreateArticleAsync(CreateArticleDto Dto);
+    Task UpdateArticleAsync(int id, UpdateArticleDto dto);
+    Task<Article> CreateArticleAsync(CreateArticleDto dto);
     Task<Article[]> GetArticlesAsync();
-    Task<Article> GetArticleAsync(int Id);
-    Task DeleteArticleAsync(int Id);
+    Task<Article> GetArticleAsync(int id);
+    Task DeleteArticleAsync(int id);
 }

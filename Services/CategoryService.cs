@@ -13,9 +13,9 @@ public class CategoryService : ICategoryService
         this._context = context;
     }
 
-    public async Task<Category> GetCategoryAsync(int Id)
+    public async Task<Category> GetCategoryAsync(int id)
     {
-        var category = await this._context.Categories.FindAsync(Id);
+        var category = await this._context.Categories.FindAsync(id);
         if (category == null)
         {
             throw new CategoryNotFoundException();

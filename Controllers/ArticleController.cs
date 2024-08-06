@@ -34,12 +34,12 @@ public class ArticleController : Controller
         }
     }
 
-    [HttpGet("GetArticle/{Id}")]
-    public async Task<ActionResult<Article>> GetArticle([FromRoute] int Id)
+    [HttpGet("GetArticle/{id}")]
+    public async Task<ActionResult<Article>> GetArticle([FromRoute] int id)
     {
         try
         {
-            return Ok(await this._articleService.GetArticleAsync(Id));
+            return Ok(await this._articleService.GetArticleAsync(id));
         }
         catch (ArticleNotFoundException ex)
         {
@@ -70,12 +70,12 @@ public class ArticleController : Controller
         }
     }
 
-    [HttpDelete("DeleteArticle/{Id}")]
-    public async Task<ActionResult<Article>> DeleteArticle([FromRoute] int Id)
+    [HttpDelete("DeleteArticle/{id}")]
+    public async Task<ActionResult<Article>> DeleteArticle([FromRoute] int id)
     {
         try
         {
-            await this._articleService.DeleteArticleAsync(Id);
+            await this._articleService.DeleteArticleAsync(id);
 
             return NoContent();
         }
@@ -89,12 +89,12 @@ public class ArticleController : Controller
         }
     }
 
-    [HttpPatch("UpdateArticle/{Id}")]
-    public async Task<ActionResult<Article>> UpdateArticle([FromRoute] int Id, [FromBody] UpdateArticleDto Dto)
+    [HttpPatch("UpdateArticle/{id}")]
+    public async Task<ActionResult<Article>> UpdateArticle([FromRoute] int id, [FromBody] UpdateArticleDto dto)
     {
         try
         {
-            await this._articleService.UpdateArticleAsync(Id, Dto);
+            await this._articleService.UpdateArticleAsync(id, dto);
 
             return NoContent();
         }

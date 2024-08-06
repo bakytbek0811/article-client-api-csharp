@@ -18,40 +18,40 @@ public class ArticleService : IArticleService
         this._authorService = authorService;
     }
 
-    public async Task UpdateArticleAsync(int Id, UpdateArticleDto Dto)
+    public async Task UpdateArticleAsync(int id, UpdateArticleDto dto)
     {
-        var Article = await this.GetArticleAsync(Id);
+        var article = await this.GetArticleAsync(id);
 
-        await this._categoryService.GetCategoryAsync(Dto.CategoryId);
-        await this._authorService.GetAuthorAsync(Dto.AuthorId);
+        await this._categoryService.GetCategoryAsync(dto.CategoryId);
+        await this._authorService.GetAuthorAsync(dto.AuthorId);
 
-        Article.CategoryId = Dto.CategoryId;
-        Article.AuthorId = Dto.AuthorId;
-        Article.Content = Dto.Content;
-        Article.Title = Dto.Title;
+        article.CategoryId = dto.CategoryId;
+        article.AuthorId = dto.AuthorId;
+        article.Content = dto.Content;
+        article.Title = dto.Title;
 
-        _context.Entry(Article).State = EntityState.Modified;
+        _context.Entry(article).State = EntityState.Modified;
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Article> CreateArticleAsync(CreateArticleDto Dto)
+    public async Task<Article> CreateArticleAsync(CreateArticleDto dto)
     {
-        await this._categoryService.GetCategoryAsync(Dto.CategoryId);
-        await this._authorService.GetAuthorAsync(Dto.AuthorId);
-        
-        var NewArticle = new Article
+        await this._categoryService.GetCategoryAsync(dto.CategoryId);
+        await this._authorService.GetAuthorAsync(dto.AuthorId);
+
+        var newArticle = new Article
         {
-            Title = Dto.Title,
-            Content = Dto.Content,
+            Title = dto.Title,
+            Content = dto.Content,
             PublishedDate = DateTime.Now.ToUniversalTime(),
-            AuthorId = Dto.AuthorId,
-            CategoryId = Dto.CategoryId
+            AuthorId = dto.AuthorId,
+            CategoryId = dto.CategoryId
         };
 
-        this._context.Articles.Add(NewArticle);
+        this._context.Articles.Add(newArticle);
         await _context.SaveChangesAsync();
 
-        return NewArticle;
+        return newArticle;
     }
 
     public async Task<Article[]> GetArticlesAsync()
@@ -62,12 +62,12 @@ public class ArticleService : IArticleService
             .ToArrayAsync();
     }
 
-    public async Task<Article> GetArticleAsync(int Id)
+    public async Task<Article> GetArticleAsync(int id)
     {
         var article = await this._context.Articles
             .Include(a => a.Author)
             .Include(a => a.Category)
-            .FirstOrDefaultAsync(a => a.Id == Id);
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (article == null)
         {
@@ -77,16 +77,11 @@ public class ArticleService : IArticleService
         return article;
     }
 
-    public async Task DeleteArticleAsync(int Id)
+    public async Task DeleteArticleAsync(int id)
     {
-        var article = await this.GetArticleAsync(Id);
+        var article = await this.GetArticleAsync(id);
 
         _context.Articles.Remove(article);
         await _context.SaveChangesAsync();
-    }
-
-    public async Task<bool> IsArticleExistsByIdAsync(int Id)
-    {
-        return await this._context.Articles.FindAsync(Id) != null;
     }
 }

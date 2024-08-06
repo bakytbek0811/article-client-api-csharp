@@ -1,0 +1,15 @@
+services:
+  postgres:
+    container_name: article_db_postgres
+    image: postgres
+    environment:
+      - POSTGRES_USER=articles
+      - POSTGRES_PASSWORD=aR7j9BIFhf2JiI1vf92fu
+    ports:
+      - "4268:5432"
+
+  api:
+    container_name: client_api
+    ports:
+      - "8000:8080"
+    build: .

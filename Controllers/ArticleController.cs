@@ -1,5 +1,8 @@
 using ArticleApi.Data;
 using ArticleApi.Dto;
+using ArticleApi.Exceptions;
+using ArticleApi.Models;
+using ArticleApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,133 +13,99 @@ namespace ArticleApi.Controllers;
 public class ArticleController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly IArticleService _articleService;
 
-    public ArticleController(AppDbContext context)
+    public ArticleController(AppDbContext context, IArticleService articleService)
     {
-        _context = context;
+        this._context = context;
+        this._articleService = articleService;
     }
 
     [HttpGet("GetArticles")]
     public async Task<ActionResult<IEnumerable<Article>>> GetArticles()
     {
-        return await _context.Articles
-            .Include(a => a.Author)
-            .Include(a => a.Category)
-            .ToListAsync();
+        try
+        {
+            return Ok(await _articleService.GetArticlesAsync());
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse(500, ex.Message));
+        }
     }
 
     [HttpGet("GetArticle/{Id}")]
     public async Task<ActionResult<Article>> GetArticle([FromRoute] int Id)
     {
-        var article = await _context.Articles
-            .Include(a => a.Author)
-            .Include(a => a.Category)
-            .FirstOrDefaultAsync(a => a.Id == Id);
-
-        if (article == null)
+        try
         {
-            return NotFound("Article not found");
+            return Ok(await this._articleService.GetArticleAsync(Id));
         }
-
-        return Ok(article);
+        catch (ArticleNotFoundException ex)
+        {
+            return NotFound(new ErrorResponse(404, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse(500, ex.Message));
+        }
     }
 
     [HttpPost("CreateArticle")]
     public async Task<ActionResult<Article>> CreateArticle([FromBody] CreateArticleDto article)
     {
-        Category category = _context.Categories.Find(article.CategoryId);
-        if (category == null)
-        {
-            return NotFound("Category not found");
-        }
-
-        Author author = _context.Authors.Find(article.AuthorId);
-        if (author == null)
-        {
-            return NotFound("Author not found");
-        }
-
-        Article newArticle = new Article();
-        newArticle.AuthorId = article.AuthorId;
-        newArticle.CategoryId = article.CategoryId;
-        newArticle.Content = article.Content;
-        newArticle.Title = article.Title;
-        newArticle.PublishedDate = DateTime.Now.ToUniversalTime();
-
         try
         {
-            _context.Articles.Add(newArticle);
-            await _context.SaveChangesAsync();
+            await _articleService.CreateArticleAsync(article);
 
-            return Ok(newArticle);
+            return Created();
+        }
+        catch (Exception ex) when (ex is AuthorNotFoundException or CategoryNotFoundException)
+        {
+            return NotFound(new ErrorResponse(404, ex.Message));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
+            return StatusCode(500, new ErrorResponse(500, ex.Message));
         }
     }
 
     [HttpDelete("DeleteArticle/{Id}")]
     public async Task<ActionResult<Article>> DeleteArticle([FromRoute] int Id)
     {
-        Article article = await _context.Articles.FindAsync(Id);
-        if (article == null)
+        try
         {
-            return NotFound("Article not found");
+            await this._articleService.DeleteArticleAsync(Id);
+
+            return NoContent();
         }
-
-        _context.Articles.Remove(article);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        catch (ArticleNotFoundException ex)
+        {
+            return NotFound(new ErrorResponse(404, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse(500, ex.Message));
+        }
     }
 
     [HttpPatch("UpdateArticle/{Id}")]
-    public async Task<ActionResult<Article>> UpdateArticle([FromRoute] int Id, [FromBody] UpdateArticleDto dto)
+    public async Task<ActionResult<Article>> UpdateArticle([FromRoute] int Id, [FromBody] UpdateArticleDto Dto)
     {
-        Article article = await _context.Articles.FindAsync(Id);
-        if (article == null)
-        {
-            return NotFound("Article not found");
-        }
-
-        var authorExists = await _context.Authors.AnyAsync(a => a.Id == dto.AuthorId);
-        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId);
-
-        if (!authorExists || !categoryExists)
-        {
-            return BadRequest("Invalid AuthorId or CategoryId.");
-        }
-
-        article.Title = dto.Title;
-        article.Content = dto.Content;
-        article.AuthorId = dto.AuthorId;
-        article.CategoryId = dto.CategoryId;
-        article.PublishedDate = article.PublishedDate.ToUniversalTime();
-
         try
         {
-            _context.Entry(article).State = EntityState.Modified;
+            await this._articleService.UpdateArticleAsync(Id, Dto);
 
-            await _context.SaveChangesAsync();
+            return NoContent();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception ex) when (ex is AuthorNotFoundException or CategoryNotFoundException
+                                       or ArticleNotFoundException)
         {
-            if (!ArticleExists(Id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound(new ErrorResponse(404, ex.Message));
         }
-
-        return NoContent();
-    }
-
-    private bool ArticleExists(int id)
-    {
-        return _context.Articles.Any(e => e.Id == id);
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse(500, ex.Message));
+        }
     }
 }
